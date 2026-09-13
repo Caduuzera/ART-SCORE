@@ -1338,17 +1338,319 @@ items.forEach(item=>{const div=document.createElement("div");div.className="list
 
 document.getElementById("saveButton").addEventListener("click",saveCurrentDrawing);
 
-function saveCurrentDrawing(){
-if(!currentResult||!selectedImage)return;
+async function saveCurrentDrawing(){
 
-const rankingName=document.getElementById("rankingName").value.trim();
-const participateRanking=document.getElementById("participateRanking").checked;
-const allowView=document.getElementById("allowView").checked;
+    if(!currentResult || !selectedImage){
+        return;
+    }
 
-if(participateRanking&&!rankingName){
-alert("Digite um nome para participar do ranking.");
-document.getElementById("rankingName").focus();
-return;
+    const rankingName =
+        document.getElementById("rankingName").value.trim();
+
+    const participateRanking =
+        document.getElementById("participateRanking").checked;
+
+    const allowView =
+        document.getElementById("allowView").checked;
+
+    if(participateRanking && !rankingName){
+        alert("Digite um nome para participar do ranking.");
+        document.getElementById("rankingName").focus();
+        return;
+    }
+
+    const {
+        data: { user },
+        error: userError
+    } = await supabaseClient.auth.getUser();
+
+    if(userError || !user){
+        alert("Você precisa estar logado para salvar o desenho.");
+        return;
+    }
+
+    let drawingUrl = null;
+
+    if(participateRanking && allowView){
+
+        drawingUrl =
+            await uploadDrawingImage(selectedImage, user.id);
+
+        if(!drawingUrl){
+            alert(
+                "Não foi possível enviar a imagem para o ranking."
+            );
+            return;
+        }
+    }
+
+    const drawings = getDrawings();
+
+    const drawing = {
+        id: Date.now(),
+        image: selectedImage,
+        score: currentResult.generalScore,
+        percentage: currentResult.percentage,
+        public: allowView,
+        rankingName: rankingName || "Artista",
+        participateRanking: participateRanking,
+        allowView: allowView,
+        createdAt: new Date().toISOString()
+    };
+
+    drawings.push(drawing);
+
+    localStorage.setItem(
+        "artScoreDrawings",
+        JSON.stringify(drawings)
+    );
+
+    if(participateRanking){
+
+        const {
+            data: existing,
+            error: existingError
+        } = await supabaseClient
+            .from("ranking_entries")
+            .select("id, score")
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+        if(existingError){
+            console.error(existingError);
+
+            alert(
+                "O desenho foi salvo, mas houve um erro ao verificar seu ranking."
+            );
+
+            renderGallery();
+            return;
+        }
+
+        const newScore =
+            Number(currentResult.generalScore) || 0;
+
+        if(!existing || newScore > Number(existing.score)){
+
+            const rankingData = {
+                user_id: user.id,
+                ranking_name: rankingName || "Artista",
+                score: newScore,
+                percentage:
+                    Number(currentResult.percentage) || 0,
+                drawing_url: drawingUrl,
+                is_public: true,
+                drawing_public: allowView
+            };
+
+            let rankingError = null;
+
+            if(existing){
+
+                const result =
+                    await supabaseClient
+                        .from("ranking_entries")
+                        .update(rankingData)
+                        .eq("id", existing.id);
+
+                rankingError = result.error;
+
+            }else{
+
+                const result =
+                    await supabaseClient
+                        .from("ranking_entries")
+                        .insert(rankingData);
+
+                rankingError = result.error;
+            }
+
+            if(rankingError){
+
+                console.error(rankingError);
+
+                alert(
+                    "O desenho foi salvo, mas houve um erro ao atualizar o ranking."
+                );
+
+            }else{
+
+                alert(
+                    "
+
+async function uploadDrawingImage(dataUrl, userId){
+
+    try {
+
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+
+        const filePath =
+            userId + "/" + Date.now() + ".jpg";
+
+        const { error } =
+            await supabaseClient
+                .storage
+                .from("drawings")
+                .upload(filePath, blob, {
+                    contentType: "image/jpeg",
+                    upsert: false
+                });
+
+        if(error){
+            console.error("Erro no upload:", error);
+            return null;
+        }
+
+        const { data } =
+            supabaseClient
+                .storage
+                .from("drawings")
+                .getPublicUrl(filePath);
+
+        return data.publicUrl;
+
+    } catch(error) {
+
+        console.error("Erro ao enviar imagem:", error);
+        return null;
+
+    }
+}
+
+        const { data } =
+            supabaseClient
+                .storage
+                .from("drawings")
+                .getPublicUrl(filePath);
+
+        return data.publicUrl;
+
+    } catch(error) {
+
+        console.error("Erro ao enviar imagem:", error);
+        return null;
+
+    }
+}
+
+    const rankingName =
+        document.getElementById("rankingName").value.trim();
+
+    const participateRanking =
+        document.getElementById("participateRanking").checked;
+
+    const allowView =
+        document.getElementById("allowView").checked;
+
+    if(participateRanking && !rankingName){
+        alert("Digite um nome para participar do ranking.");
+        document.getElementById("rankingName").focus();
+        return;
+    }
+
+    const {
+        data: { user },
+        error: userError
+    } = await supabaseClient.auth.getUser();
+
+    if(userError || !user){
+        alert("Você precisa estar logado para salvar o desenho.");
+        return;
+    }
+
+    const drawings = getDrawings();
+
+    const drawing = {
+        id: Date.now(),
+        image: selectedImage,
+        score: currentResult.generalScore,
+        percentage: currentResult.percentage,
+        public: allowView,
+        rankingName: rankingName || "Artista",
+        participateRanking: participateRanking,
+        allowView: allowView,
+        createdAt: new Date().toISOString()
+    };
+
+    drawings.push(drawing);
+
+    localStorage.setItem(
+        "artScoreDrawings",
+        JSON.stringify(drawings)
+    );
+
+    if(participateRanking){
+
+        const { data: existing, error: existingError } =
+            await supabaseClient
+                .from("ranking_entries")
+                .select("id, score")
+                .eq("user_id", user.id)
+                .maybeSingle();
+
+        if(existingError){
+            console.error(existingError);
+            alert("O desenho foi salvo, mas não foi possível verificar seu ranking.");
+            renderGallery();
+            return;
+        }
+
+        const newScore = Number(currentResult.generalScore) || 0;
+
+        if(!existing || newScore > Number(existing.score)){
+
+            const rankingData = {
+                user_id: user.id,
+                ranking_name: rankingName || "Artista",
+                score: newScore,
+                percentage: Number(currentResult.percentage) || 0,
+                drawing_url: null,
+                is_public: true,
+                drawing_public: allowView
+            };
+
+            let rankingError;
+
+            if(existing){
+
+                const result = await supabaseClient
+                    .from("ranking_entries")
+                    .update(rankingData)
+                    .eq("id", existing.id);
+
+                rankingError = result.error;
+
+            }else{
+
+                const result = await supabaseClient
+                    .from("ranking_entries")
+                    .insert(rankingData);
+
+                rankingError = result.error;
+            }
+
+            if(rankingError){
+                console.error(rankingError);
+                alert("O desenho foi salvo, mas houve um erro ao atualizar o ranking.");
+            }else{
+                alert("Desenho salvo e ranking global atualizado.");
+            }
+
+        }else{
+
+            alert(
+                "Desenho salvo. Seu desenho atual não supera sua melhor pontuação no ranking."
+            );
+        }
+
+    }else{
+
+        alert("Desenho salvo.");
+    }
+
+    renderGallery();
+    renderRanking();
 }
 
 const drawings=getDrawings();
@@ -1393,42 +1695,144 @@ gallery.appendChild(card);
 });
 }
 
-function renderRanking(){
-const ranking=document.getElementById("ranking");
-const drawings=getDrawings().filter(d=>Boolean(d.participateRanking));
-drawings.sort((a,b)=>(Number(b.score)||0)-(Number(a.score)||0));
+async function renderRanking(){
+    const ranking = document.getElementById("ranking");
 
-if(drawings.length===0){
-ranking.innerHTML=`<div class="card empty">Nenhum desenho está participando do ranking ainda.</div>`;
-return;
+    ranking.innerHTML = `
+        <div class="card empty">
+            Carregando ranking global...
+        </div>
+    `;
+
+    const { data, error } = await supabaseClient
+        .from("ranking_entries")
+        .select(`
+            id,
+            ranking_name,
+            score,
+            percentage,
+            drawing_url,
+            is_public,
+            created_at
+        `)
+        .eq("is_public", true)
+        .order("score", { ascending: false });
+
+    if(error){
+        console.error(error);
+
+        ranking.innerHTML = `
+            <div class="card empty">
+                Não foi possível carregar o ranking.
+            </div>
+        `;
+
+        return;
+    }
+
+    if(!data || data.length === 0){
+        ranking.innerHTML = `
+            <div class="card empty">
+                Nenhum desenho está participando do ranking ainda.
+            </div>
+        `;
+
+        return;
+    }
+
+    ranking.innerHTML = "";
+
+    data.forEach((entry, index) => {
+
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const name = escapeHtml(entry.ranking_name || "Artista");
+        const score = Number(entry.score) || 0;
+        const percentage = Number(entry.percentage) || 0;
+
+        card.innerHTML = `
+            <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                gap:15px;
+            ">
+
+                <div>
+                    <strong>#${index + 1}</strong>
+
+                    <div style="
+                        color:#d6edf2;
+                        font-size:15px;
+                        margin-top:6px;
+                    ">
+                        ${name}
+                    </div>
+
+                    <div style="
+                        color:#8ca9b2;
+                        font-size:12px;
+                        margin-top:5px;
+                    ">
+                        Participante do ranking global
+                    </div>
+                </div>
+
+                <div style="text-align:right;">
+
+                    <strong style="
+                        color:#5de6ff;
+                        font-size:20px;
+                    ">
+                        ${score.toFixed(2)}
+                    </strong>
+
+                    <div style="
+                        color:#78949d;
+                        font-size:11px;
+                    ">
+                        ${percentage.toFixed(1)}%
+                    </div>
+
+                </div>
+
+            </div>
+        `;
+
+        if(entry.drawing_url){
+
+            const actions = document.createElement("div");
+            actions.className = "rank-actions";
+
+            const viewButton =
+                document.createElement("button");
+
+            viewButton.textContent = "VER DESENHO";
+
+            viewButton.onclick = () =>
+                openImageModal(entry.drawing_url);
+
+            actions.appendChild(viewButton);
+            card.appendChild(actions);
+
+        }else{
+
+            const privateText =
+                document.createElement("div");
+
+            privateText.style.cssText =
+                "color:#718c96;font-size:12px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06);";
+
+            privateText.textContent =
+                "Desenho privado";
+
+            card.appendChild(privateText);
+        }
+
+        ranking.appendChild(card);
+    });
 }
-
-ranking.innerHTML="";
-drawings.forEach((drawing,index)=>{
-const card=document.createElement("div");card.className="card";
-const name=escapeHtml(drawing.rankingName||"Artista");
-const score=Number(drawing.score)||0;
-const percentage=Number(drawing.percentage)||0;
-const canView=Boolean(drawing.allowView||drawing.public);
-
-card.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:15px;"><div><strong>#${index+1}</strong><div style="color:#d6edf2;font-size:15px;margin-top:6px;">${name}</div><div style="color:#8ca9b2;font-size:12px;margin-top:5px;">Participante do ranking</div></div><div style="text-align:right;"><strong style="color:#5de6ff;font-size:20px;">${score.toFixed(2)}</strong><div style="color:#78949d;font-size:11px;">${percentage.toFixed(1)}%</div></div></div>`;
-
-if(canView){
-const actions=document.createElement("div");actions.className="rank-actions";
-const viewButton=document.createElement("button");viewButton.textContent="VER DESENHO";viewButton.onclick=()=>openImageModal(drawing.image);
-actions.appendChild(viewButton);
-card.appendChild(actions);
-}else{
-const privateText=document.createElement("div");
-privateText.style.cssText="color:#718c96;font-size:12px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06);";
-privateText.textContent="Desenho privado";
-card.appendChild(privateText);
-}
-ranking.appendChild(card);
-});
-}
-
-function openImageModal(image){
 document.getElementById("modalImage").src=image;
 document.getElementById("imageModal").classList.add("active");
 }
@@ -1479,4 +1883,4 @@ setTimeout(() => {
 </script>
 
 </body>
-</html>
+    </html>
