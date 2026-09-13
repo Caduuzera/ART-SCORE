@@ -735,7 +735,7 @@ body.midnight #backgroundAnimation::before{
 <div class="subtitle">Fotografe seu desenho ou escolha uma imagem da galeria. O ART SCORE analisará características visuais da imagem.</div>
 <div class="card">
 <div class="upload-box">
-<input id="imageInput" type="file" accept="image/*"
+<input id="imageInput" type="file" accept="image/*">
 <p>Para maior precisão, fotografe a folha inteira, tentando manter suas bordas visíveis.</p>
 </div>
 <img id="preview" class="preview">
@@ -820,7 +820,7 @@ body.midnight #backgroundAnimation::before{
 
 <section id="rankingPage" class="page">
 <h1>Ranking</h1>
-<div class="subtitle">Ranking local dos desenhos que escolheram participar neste dispositivo.</div>
+<div class="subtitle">Ranking global dos desenhos que escolheram participar.</div>
 <div id="ranking"></div>
 </section>
 
@@ -1336,288 +1336,68 @@ const element=document.getElementById(id);element.innerHTML="";
 items.forEach(item=>{const div=document.createElement("div");div.className="list-item";div.textContent=item;element.appendChild(div);});
 }
 
-document.getElementById("saveButton").addEventListener("click",saveCurrentDrawing);
+document.getElementById("saveButton").addEventListener("click", saveCurrentDrawing);
 
 async function saveCurrentDrawing(){
 
     if(!currentResult || !selectedImage){
+        alert("Analise um desenho antes de salvar.");
         return;
     }
 
-    const rankingName =
-        document.getElementById("rankingName").value.trim();
+    const userResult = await supabaseClient.auth.getUser();
+    const user = userResult.data.user;
 
-    const participateRanking =
-        document.getElementById("participateRanking").checked;
-
-    const allowView =
-        document.getElementById("allowView").checked;
-
-    if(participateRanking && !rankingName){
-        alert("Digite um nome para participar do ranking.");
-        document.getElementById("rankingName").focus();
+    if(!user){
+        alert("Você precisa estar conectado.");
         return;
     }
 
-    const {
-        data: { user },
-        error: userError
-    } = await supabaseClient.auth.getUser();
-
-    if(userError || !user){
-        alert("Você precisa estar logado para salvar o desenho.");
-        return;
-    }
+    const rankingName = document.getElementById("rankingName").value.trim();
+    const participateRanking = document.getElementById("participateRanking").checked;
+    const allowView = document.getElementById("allowView").checked;
 
     let drawingUrl = null;
 
     if(participateRanking && allowView){
-
-        drawingUrl =
-            await uploadDrawingImage(selectedImage, user.id);
-
-        if(!drawingUrl){
-            alert(
-                "Não foi possível enviar a imagem para o ranking."
-            );
-            return;
-        }
+        drawingUrl = await uploadDrawingImage(selectedImage, user.id);
     }
-
-    const drawings = getDrawings();
-
-    const drawing = {
-        id: Date.now(),
-        image: selectedImage,
-        score: currentResult.generalScore,
-        percentage: currentResult.percentage,
-        public: allowView,
-        rankingName: rankingName || "Artista",
-        participateRanking: participateRanking,
-        allowView: allowView,
-        createdAt: new Date().toISOString()
-    };
-
-    drawings.push(drawing);
-
-    localStorage.setItem(
-        "artScoreDrawings",
-        JSON.stringify(drawings)
-    );
 
     if(participateRanking){
 
-        const {
-            data: existing,
-            error: existingError
-        } = await supabaseClient
-            .from("ranking_entries")
-            .select("id, score")
-            .eq("user_id", user.id)
-            .maybeSingle();
-
-        if(existingError){
-            console.error(existingError);
-
-            alert(
-                "O desenho foi salvo, mas houve um erro ao verificar seu ranking."
-            );
-
-            renderGallery();
-            return;
-        }
-
-        const newScore =
-            Number(currentResult.generalScore) || 0;
-
-        if(!existing || newScore > Number(existing.score)){
-
-            const rankingData = {
-                user_id: user.id,
-                ranking_name: rankingName || "Artista",
-                score: newScore,
-                percentage:
-                    Number(currentResult.percentage) || 0,
-                drawing_url: drawingUrl,
-                is_public: true,
-                drawing_public: allowView
-            };
-
-            let rankingError = null;
-
-            if(existing){
-
-                const result =
-                    await supabaseClient
-                        .from("ranking_entries")
-                        .update(rankingData)
-                        .eq("id", existing.id);
-
-                rankingError = result.error;
-
-            }else{
-
-                const result =
-                    await supabaseClient
-                        .from("ranking_entries")
-                        .insert(rankingData);
-
-                rankingError = result.error;
-            }
-
-            if(rankingError){
-
-                console.error(rankingError);
-
-                alert(
-                    "O desenho foi salvo, mas houve um erro ao atualizar o ranking."
-                );
-
-            }else{
-
-                alert(
-                    "
-
-async function uploadDrawingImage(dataUrl, userId){
-
-    try {
-
-        const response = await fetch(dataUrl);
-        const blob = await response.blob();
-
-        const filePath =
-            userId + "/" + Date.now() + ".jpg";
-
-        const { error } =
-            await supabaseClient
-                .storage
-                .from("drawings")
-                .upload(filePath, blob, {
-                    contentType: "image/jpeg",
-                    upsert: false
-                });
-
-        if(error){
-            console.error("Erro no upload:", error);
-            return null;
-        }
-
-        const { data } =
-            supabaseClient
-                .storage
-                .from("drawings")
-                .getPublicUrl(filePath);
-
-        return data.publicUrl;
-
-    } catch(error) {
-
-        console.error("Erro ao enviar imagem:", error);
-        return null;
-
-    }
-}
-
-        const { data } =
-            supabaseClient
-                .storage
-                .from("drawings")
-                .getPublicUrl(filePath);
-
-        return data.publicUrl;
-
-    } catch(error) {
-
-        console.error("Erro ao enviar imagem:", error);
-        return null;
-
-    }
-}
-
-    const rankingName =
-        document.getElementById("rankingName").value.trim();
-
-    const participateRanking =
-        document.getElementById("participateRanking").checked;
-
-    const allowView =
-        document.getElementById("allowView").checked;
-
-    if(participateRanking && !rankingName){
-        alert("Digite um nome para participar do ranking.");
-        document.getElementById("rankingName").focus();
-        return;
-    }
-
-    const {
-        data: { user },
-        error: userError
-    } = await supabaseClient.auth.getUser();
-
-    if(userError || !user){
-        alert("Você precisa estar logado para salvar o desenho.");
-        return;
-    }
-
-    const drawings = getDrawings();
-
-    const drawing = {
-        id: Date.now(),
-        image: selectedImage,
-        score: currentResult.generalScore,
-        percentage: currentResult.percentage,
-        public: allowView,
-        rankingName: rankingName || "Artista",
-        participateRanking: participateRanking,
-        allowView: allowView,
-        createdAt: new Date().toISOString()
-    };
-
-    drawings.push(drawing);
-
-    localStorage.setItem(
-        "artScoreDrawings",
-        JSON.stringify(drawings)
-    );
-
-    if(participateRanking){
-
-        const { data: existing, error: existingError } =
+        const { data: existingRanking, error: existingError } =
             await supabaseClient
                 .from("ranking_entries")
-                .select("id, score")
+                .select("id, score, percentage")
                 .eq("user_id", user.id)
                 .maybeSingle();
 
         if(existingError){
             console.error(existingError);
-            alert("O desenho foi salvo, mas não foi possível verificar seu ranking.");
-            renderGallery();
+            alert("Erro ao verificar seu ranking.");
             return;
         }
 
-        const newScore = Number(currentResult.generalScore) || 0;
-
-        if(!existing || newScore > Number(existing.score)){
+        if(!existingRanking || currentResult.generalScore > existingRanking.score){
 
             const rankingData = {
                 user_id: user.id,
                 ranking_name: rankingName || "Artista",
-                score: newScore,
-                percentage: Number(currentResult.percentage) || 0,
-                drawing_url: null,
-                is_public: true,
+                score: currentResult.generalScore,
+                percentage: currentResult.percentage,
+                drawing_url: drawingUrl,
+                is_public: allowView,
                 drawing_public: allowView
             };
 
             let rankingError;
 
-            if(existing){
+            if(existingRanking){
 
                 const result = await supabaseClient
                     .from("ranking_entries")
                     .update(rankingData)
-                    .eq("id", existing.id);
+                    .eq("id", existingRanking.id);
 
                 rankingError = result.error;
 
@@ -1632,46 +1412,75 @@ async function uploadDrawingImage(dataUrl, userId){
 
             if(rankingError){
                 console.error(rankingError);
-                alert("O desenho foi salvo, mas houve um erro ao atualizar o ranking.");
-            }else{
-                alert("Desenho salvo e ranking global atualizado.");
+                alert("Erro ao salvar no ranking.");
+                return;
             }
-
-        }else{
-
-            alert(
-                "Desenho salvo. Seu desenho atual não supera sua melhor pontuação no ranking."
-            );
         }
-
-    }else{
-
-        alert("Desenho salvo.");
     }
 
+    const drawings = getDrawings();
+
+    const drawing = {
+        id: Date.now(),
+        image: selectedImage,
+        score: currentResult.generalScore,
+        percentage: currentResult.percentage,
+        public: allowView,
+        rankingName: rankingName || "Artista",
+        participateRanking: participateRanking,
+        allowView: allowView,
+        createdAt: new Date().toISOString()
+    };
+
+    drawings.push(drawing);
+
+    localStorage.setItem(
+        "artScoreDrawings",
+        JSON.stringify(drawings)
+    );
+
+    alert("Desenho salvo.");
     renderGallery();
-    renderRanking();
 }
 
-const drawings=getDrawings();
-const drawing={
-id:Date.now(),
-image:selectedImage,
-score:currentResult.generalScore,
-percentage:currentResult.percentage,
-public:allowView,
-rankingName:rankingName||"Artista",
-participateRanking:participateRanking,
-allowView:allowView,
-createdAt:new Date().toISOString()
-};
+async function uploadDrawingImage(dataUrl, userId){
 
-drawings.push(drawing);
-localStorage.setItem("artScoreDrawings",JSON.stringify(drawings));
-alert("Desenho salvo.");
-renderGallery();
+    try{
+
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+
+        const fileName =
+            userId + "/" + Date.now() + ".jpg";
+
+        const { error } =
+            await supabaseClient
+                .storage
+                .from("drawings")
+                .upload(fileName, blob, {
+                    contentType: "image/jpeg",
+                    upsert: false
+                });
+
+        if(error){
+            console.error(error);
+            return null;
+        }
+
+        const { data } =
+            supabaseClient
+                .storage
+                .from("drawings")
+                .getPublicUrl(fileName);
+
+        return data.publicUrl;
+
+    }catch(error){
+
+        console.error(error);
+        return null;
+    }
 }
-
 function getDrawings(){
 try{return JSON.parse(localStorage.getItem("artScoreDrawings"))||[]}
 catch(error){return[]}
@@ -1833,8 +1642,9 @@ async function renderRanking(){
         ranking.appendChild(card);
     });
 }
-document.getElementById("modalImage").src=image;
-document.getElementById("imageModal").classList.add("active");
+function openImageModal(image){
+    document.getElementById("modalImage").src = image;
+    document.getElementById("imageModal").classList.add("active");
 }
 
 function closeImageModal(event){
@@ -1883,4 +1693,4 @@ setTimeout(() => {
 </script>
 
 </body>
-    </html>
+</html>
