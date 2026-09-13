@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ART SCORE</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const SUPABASE_URL = "https://jgqhuxtuqfogojnydvox.supabase.co";
+
+const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    "sb_publishable_57iOYpH7nTUYliRVV2nTSg_kGamZuiS"
+);
+</script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}
+body{background:#050a10;color:#eafcff;min-height:100vh}
+header{height:65px;display:flex;align-items:center;justify-content:center;border-bottom:1px solid rgba(0,220,255,.25);background:rgba(5,12,20,.92);position:sticky;top:0;z-index:10}
+.logo{font-size:22px;font-weight:bold;letter-spacing:4px;color:#dffcff;text-shadow:0 0 15px rgba(0,220,255,.7)}
+.page{display:none;padding:22px 16px 90px;max-width:700px;margin:auto}
+.page.active{display:block}
+h1{font-size:25px;margin-bottom:8px}
+.subtitle{color:#8ba8b4;font-size:14px;line-height:1.5;margin-bottom:22px}
+.card{background:linear-gradient(145deg,rgba(16,32,44,.92),rgba(5,15,23,.92));border:1px solid rgba(0,220,255,.22);border-radius:18px;padding:18px;margin-bottom:15px;box-shadow:0 0 25px rgba(0,180,255,.06),inset 0 0 20px rgba(0,220,255,.02)}
+.upload-box{border:1px dashed rgba(0,220,255,.5);border-radius:16px;padding:28px 15px;text-align:center;margin-bottom:15px}
+.upload-box p{color:#8faab5;font-size:13px;margin-top:8px}
+input[type=file]{width:100%;color:#9dc4ce}
+button{width:100%;border:none;border-radius:12px;padding:14px;background:linear-gradient(90deg,#00b7e8,#39e7ff);color:#001018;font-size:15px;font-weight:bold;cursor:pointer;margin-top:10px}
+button:disabled{opacity:.4}
+.secondary{background:rgba(0,200,255,.08);color:#bceefa;border:1px solid rgba(0,220,255,.25)}
+.preview{width:100%;max-height:500px;object-fit:contain;border-radius:14px;display:none;background:#000;margin-top:15px}
+.analysis-box{text-align:center;padding:35px 15px}
+.spinner{width:55px;height:55px;border-radius:50%;border:4px solid rgba(0,220,255,.15);border-top-color:#28dcff;animation:spin 1s linear infinite;margin:0 auto 20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.status{color:#9ec3cc;font-size:14px;min-height:22px}
+.score-box{text-align:center;padding:25px 10px}
+.score{font-size:58px;font-weight:bold;color:#dffcff;text-shadow:0 0 25px rgba(0,220,255,.65)}
+.percent{color:#5ce6ff;font-size:21px;margin-top:3px}
+.small-info{color:#809ba5;font-size:12px;margin-top:8px}
+.category{margin-bottom:18px}
+.category-head{display:flex;justify-content:space-between;margin-bottom:7px;font-size:13px}
+.category-name{color:#d6edf2}.category-score{color:#5fe5ff}
+.bar{height:7px;border-radius:20px;background:#101d25;overflow:hidden}
+.bar-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,#008fc0,#56eaff)}
+.list{margin-top:10px}
+.list-item{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);color:#a8c0c8;font-size:13px;line-height:1.5}
+.list-item:last-child{border-bottom:none}
+.notice{color:#77919b;font-size:11px;line-height:1.5;margin-top:15px}
+.toggle{display:flex;align-items:center;justify-content:space-between;margin-top:15px;gap:15px}
+.toggle label{font-size:14px;line-height:1.4}
+.toggle input{width:20px;height:20px;flex-shrink:0}
+.field-label{display:block;color:#ccecf2;font-size:13px;margin-bottom:8px}
+.text-input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid rgba(0,220,255,.25);background:rgba(0,0,0,.25);color:#eafcff;outline:none;font-size:14px}
+.text-input:focus{border-color:#39e7ff;box-shadow:0 0 12px rgba(0,220,255,.12)}
+.option-box{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.06)}
+.drawing-card{display:flex;gap:12px;align-items:center}
+.drawing-card img{width:75px;height:75px;object-fit:cover;border-radius:10px;background:#000}
+.drawing-info{flex:1}.drawing-info strong{display:block;margin-bottom:5px}.drawing-info span{color:#7fa0aa;font-size:12px}
+.empty{text-align:center;padding:40px 10px;color:#78929b}
+.rank-image{width:100%;max-height:260px;object-fit:contain;border-radius:12px;background:#000;margin-top:14px;display:block}
+.rank-actions{display:flex;gap:8px;margin-top:10px}
+.rank-actions button{margin-top:0;flex:1}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:100;padding:20px;align-items:center;justify-content:center}
+.modal.active{display:flex}
+.modal-box{width:100%;max-width:700px;max-height:90vh;background:#071019;border:1px solid rgba(0,220,255,.3);border-radius:18px;padding:15px}
+.modal-box img{width:100%;max-height:72vh;object-fit:contain;border-radius:12px;background:#000}
+.modal-box button{margin-top:12px}
+nav{position:fixed;bottom:0;left:0;right:0;height:68px;background:rgba(4,11,17,.96);border-top:1px solid rgba(0,220,255,.2);display:flex;justify-content:space-around;z-index:20}
+nav button{background:none;border:none;margin:0;padding:5px;color:#72919b;font-size:11px;width:25%}
+nav button.active{color:#4de4ff}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stat{background:rgba(0,180,255,.05);border:1px solid rgba(0,220,255,.15);border-radius:14px;padding:14px}
+.stat-value{font-size:20px;font-weight:bold;color:#dffcff}
+.stat-label{font-size:11px;color:#76939d;margin-top:4px}
+@media(max-width:430px){.grid{grid-template-columns:1fr}}
+/* FUNDO ANIMADO */
+#backgroundAnimation{
+    position:fixed;
+    inset:0;
+    overflow:hidden;
+    pointer-events:none;
+    z-index:-1;
+    background:transparent;
+}
+
+.ambient{
+    position:absolute;
+    width:320px;
+    height:320px;
+    border-radius:50%;
+    filter:blur(80px);
+    opacity:.18;
+    animation:ambientMove 14s ease-in-out infinite alternate;
+}
+
+.ambient1{
+    top:-120px;
+    left:-100px;
+    background:#00d9ff;
+}
+
+.ambient2{
+    right:-130px;
+    top:35%;
+    background:#008cff;
+    animation-delay:-5s;
+}
+
+.ambient3{
+    bottom:-150px;
+    left:30%;
+    background:#00ffff;
+    animation-delay:-9s;
+}
+
+@keyframes ambientMove{
+    0%{
+        transform:translate(0,0) scale(1);
+    }
+    50%{
+        transform:translate(80px,40px) scale(1.2);
+    }
+    100%{
+        transform:translate(-40px,90px) scale(.9);
+    }
+}
+
+.particles{
+    position:absolute;
+    inset:0;
+    background-image:
+        radial-gradient(circle,rgba(80,230,255,.28) 1px,transparent 1px),
+        radial-gradient(circle,rgba(80,230,255,.16) 1px,transparent 1px);
+    background-size:90px 90px,140px 140px;
+    background-position:0 0,45px 60px;
+    animation:particleMove 25s linear infinite;
+    opacity:.25;
+}
+
+@keyframes particleMove{
+    from{
+        transform:translateY(0);
+    }
+    to{
+        transform:translateY(-90px);
+    }
+}
+/* AMBIENTES DO DIA */
+
+body.morning{
+    background:#07131b;
+}
+
+body.morning #backgroundAnimation{
+    filter:brightness(1.12);
+}
+
+body.afternoon{
+    background:#061019;
+}
+
+body.afternoon #backgroundAnimation{
+    filter:brightness(1.2);
+}
+
+body.night{
+    background:#040910;
+}
+
+body.night #backgroundAnimation{
+    filter:brightness(.9);
+}
+
+body.midnight{
+    background:#02050a;
+}
+
+body.midnight #backgroundAnimation{
+    filter:brightness(.65);
+}
+
+body{
+    transition:background 4s ease;
+}
+
+#backgroundAnimation{
+    transition:filter 4s ease;
+}
+/* ESTRELAS DA MADRUGADA */
+
+body.midnight #backgroundAnimation::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background-image:
+        radial-gradient(circle, rgba(255,230,120,.95) 1px, transparent 2px),
+        radial-gradient(circle, rgba(255,210,70,.8) 1px, transparent 2px),
+        radial-gradient(circle, rgba(255,245,180,.7) 1px, transparent 2px);
+    background-size:
+        140px 140px,
+        210px 210px,
+        280px 280px;
+    background-position:
+        20px 30px,
+        100px 80px,
+        50px 150px;
+    animation: estrelasPiscando 4s ease-in-out infinite alternate;
+    opacity:.8;
+}
+
+@keyframes estrelasPiscando{
+    from{
+        opacity:.35;
+    }
+    to{
+        opacity:1;
+    }
+}
+/* MADRUGADA — CÉU ROXO SUAVE */
+
+body.midnight{
+    background:#090612;
+}
+
+body.midnight #backgroundAnimation{
+    filter:brightness(.85);
+}
+
+/* Brilho roxo no céu */
+body.midnight .ambient1{
+    background:#6b3fa0;
+    opacity:.12;
+}
+
+body.midnight .ambient2{
+    background:#4b2875;
+    opacity:.10;
+}
+
+body.midnight .ambient3{
+    background:#8b5cc7;
+    opacity:.08;
+}
+
+/* Movimento lento das estrelas */
+body.midnight #backgroundAnimation::before{
+    content:"";
+    position:absolute;
+    inset:-100px;
+    background-image:
+        radial-gradient(circle,rgba(255,230,120,.95) 1px,transparent 2px),
+        radial-gradient(circle,rgba(255,210,70,.8) 1px,transparent 2px),
+        radial-gradient(circle,rgba(255,245,180,.7) 1px,transparent 2px);
+    background-size:
+        140px 140px,
+        210px 210px,
+        280px 280px;
+    background-position:
+        20px 30px,
+        100px 80px,
+        50px 150px;
+
+    animation:
+        estrelasMovimento 35s linear infinite,
+        estrelasPiscando 5s ease-in-out infinite alternate;
+
+    opacity:.75;
+}
+
+@keyframes estrelasMovimento{
+    from{
+        transform:translate(0,0);
+    }
+
+    to{
+        transform:translate(70px,35px);
+    }
+}
+
+@keyframes estrelasPiscando{
+    from{
+        opacity:.45;
+    }
+
+    to{
+        opacity:.85;
+    }
+}
+/* PALETA ROXA DA MADRUGADA */
+
+body.midnight{
+    color:#eee5ff;
+}
+
+/* Letreiro / títulos */
+body.midnight header,
+body.midnight h1,
+body.midnight h2,
+body.midnight h3{
+    color:#c9a7ff;
+}
+
+/* Textos destacados */
+body.midnight .accent,
+body.midnight .highlight{
+    color:#b98cff;
+}
+
+/* Bordas e elementos da interface */
+body.midnight button{
+    border-color:rgba(170,120,255,.35);
+}
+
+body.midnight button:hover{
+    border-color:rgba(200,160,255,.65);
+}
+
+/* Campos */
+body.midnight input,
+body.midnight select,
+body.midnight textarea{
+    border-color:rgba(160,110,230,.28);
+}
+
+/* Brilho suave */
+body.midnight header{
+    text-shadow:0 0 18px rgba(170,110,255,.35);
+}
+
+/* Remove o aspecto ciano das partículas */
+body.midnight .particles{
+    opacity:.12;
+    filter:hue-rotate(70deg);
+}
+/* =========================================
+   TEMA COMPLETO DA MADRUGADA
+   ========================================= */
+
+body.midnight{
+    background:#090612;
+    color:#eee7ff;
+}
+
+/* Fundo */
+body.midnight #backgroundAnimation{
+    filter:brightness(.85);
+}
+
+body.midnight .ambient1{
+    background:#7046a8;
+    opacity:.13;
+}
+
+body.midnight .ambient2{
+    background:#4b2878;
+    opacity:.11;
+}
+
+body.midnight .ambient3{
+    background:#8b5dcc;
+    opacity:.08;
+}
+
+/* Cabeçalho */
+body.midnight header{
+    background:rgba(12,7,22,.94);
+    border-bottom-color:rgba(175,120,255,.25);
+}
+
+body.midnight .logo{
+    color:#e6d8ff;
+    text-shadow:0 0 15px rgba(180,130,255,.65);
+}
+
+/* Títulos */
+body.midnight h1,
+body.midnight h2,
+body.midnight h3{
+    color:#e1d2ff;
+}
+
+/* Subtítulos */
+body.midnight .subtitle{
+    color:#a99ab8;
+}
+
+/* Cards */
+body.midnight .card{
+    background:linear-gradient(
+        145deg,
+        rgba(30,20,43,.92),
+        rgba(12,8,20,.94)
+    );
+
+    border-color:rgba(175,120,255,.20);
+
+    box-shadow:
+        0 0 25px rgba(130,70,190,.08),
+        inset 0 0 20px rgba(170,110,255,.025);
+}
+
+/* Área de upload */
+body.midnight .upload-box{
+    border-color:rgba(190,140,255,.45);
+}
+
+body.midnight .upload-box p{
+    color:#a99ab8;
+}
+
+/* Botão principal */
+body.midnight button{
+    background:linear-gradient(
+        90deg,
+        #7140a8,
+        #a875dc
+    );
+
+    color:#100819;
+    box-shadow:0 0 15px rgba(155,100,220,.15);
+}
+
+body.midnight button:hover{
+    box-shadow:0 0 22px rgba(180,125,255,.28);
+}
+
+/* Botão secundário */
+body.midnight button.secondary{
+    background:rgba(155,100,220,.10);
+    color:#d9c5f5;
+    border-color:rgba(180,130,255,.28);
+}
+
+/* Spinner */
+body.midnight .spinner{
+    border-color:rgba(180,130,255,.15);
+    border-top-color:#b987ed;
+}
+
+/* Status */
+body.midnight .status{
+    color:#b4a4c3;
+}
+
+/* Nota principal */
+body.midnight .score{
+    color:#eadfff;
+    text-shadow:0 0 25px rgba(185,130,255,.60);
+}
+
+body.midnight .percent{
+    color:#c092f2;
+}
+
+body.midnight .small-info{
+    color:#91829f;
+}
+
+/* Categorias */
+body.midnight .category-name{
+    color:#ddd0eb;
+}
+
+body.midnight .category-score{
+    color:#c292f0;
+}
+
+/* Barras */
+body.midnight .bar{
+    background:#191221;
+}
+
+body.midnight .bar-fill{
+    background:linear-gradient(
+        90deg,
+        #7040a5,
+        #bd91ed
+    );
+}
+
+/* Listas */
+body.midnight .list-item{
+    color:#b8a9c5;
+}
+
+/* Avisos */
+body.midnight .notice{
+    color:#91819d;
+}
+
+/* Labels */
+body.midnight .field-label{
+    color:#d7c8e6;
+}
+
+/* Campos */
+body.midnight .text-input{
+    background:rgba(5,3,10,.35);
+    border-color:rgba(170,120,240,.25);
+    color:#eee5ff;
+}
+
+body.midnight .text-input:focus{
+    border-color:#b987ed;
+    box-shadow:0 0 12px rgba(170,110,240,.15);
+}
+
+/* Ranking */
+body.midnight .drawing-info span{
+    color:#9686a4;
+}
+
+/* Estatísticas do perfil */
+body.midnight .stat{
+    background:rgba(130,70,190,.06);
+    border-color:rgba(170,120,240,.17);
+}
+
+body.midnight .stat-value{
+    color:#e7dbf5;
+}
+
+body.midnight .stat-label{
+    color:#8f809c;
+}
+
+/* Navegação inferior */
+body.midnight nav{
+    background:rgba(9,5,15,.97);
+    border-top-color:rgba(175,120,255,.22);
+}
+
+body.midnight nav button{
+    background:none;
+    color:#82758e;
+    box-shadow:none;
+}
+
+body.midnight nav button.active{
+    color:#c497f2;
+}
+
+/* Modal */
+body.midnight .modal-box{
+    background:#0d0817;
+    border-color:rgba(175,120,255,.30);
+}
+
+/* Estrelas */
+body.midnight #backgroundAnimation::before{
+    animation:
+        estrelasMovimento 35s linear infinite,
+        estrelasPiscando 5s ease-in-out infinite alternate;
+}
+/* =========================================
+   ANIMAÇÃO DE ENTRADA — DESENHO
+   ========================================= */
+
+#introAnimation{
+    position:fixed;
+    inset:0;
+    z-index:99999;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    background:#050a10;
+    animation:introExit 0.8s ease 2.8s forwards;
+}
+
+#introAnimation svg{
+    width:min(78vw,400px);
+    height:auto;
+}
+
+.draw-line{
+    fill:none;
+    stroke:#eafcff;
+    stroke-width:3;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+
+    stroke-dasharray:1000;
+    stroke-dashoffset:1000;
+
+    animation:drawLine 1.2s ease forwards;
+}
+
+.line1{animation-delay:.15s;}
+.line2{animation-delay:.45s;}
+.line3{animation-delay:.75s;}
+.line4{animation-delay:1s;}
+
+#introTitle{
+    margin-top:18px;
+    font-size:28px;
+    font-weight:700;
+    letter-spacing:7px;
+    color:#eafcff;
+
+    opacity:0;
+    transform:translateY(12px);
+
+    animation:introTitle 0.8s ease 1.7s forwards;
+}
+
+@keyframes drawLine{
+    to{
+        stroke-dashoffset:0;
+    }
+}
+
+@keyframes introTitle{
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+@keyframes introExit{
+    to{
+        opacity:0;
+        visibility:hidden;
+        pointer-events:none;
+    }
+}
+</style>
+</head>
+
+<body>
+<!-- AUTENTICAÇÃO -->
+<section id="authPage" class="page active">
+    <div class="auth-container">
+
+        <div class="auth-logo">ART SCORE</div>
+
+        <div class="card auth-card">
+
+            <h1 id="authTitle">Criar conta</h1>
+
+            <p class="subtitle" id="authSubtitle">
+                Crie seu perfil de artista.
+            </p>
+
+            <div id="signupFields">
+
+                <label class="field-label">Nome de usuário</label>
+                <input
+                    id="signupUsername"
+                    class="text-input"
+                    type="text"
+                    placeholder="@seunome"
+                    maxlength="30"
+                >
+
+                <label class="field-label">Nome de exibição</label>
+                <input
+                    id="signupDisplayName"
+                    class="text-input"
+                    type="text"
+                    placeholder="Seu nome"
+                    maxlength="50"
+                >
+
+            </div>
+
+            <label class="field-label">E-mail</label>
+            <input
+                id="authEmail"
+                class="text-input"
+                type="email"
+                placeholder="seu@email.com"
+            >
+
+            <label class="field-label">Senha</label>
+            <input
+                id="authPassword"
+                class="text-input"
+                type="password"
+                placeholder="Sua senha"
+            >
+
+            <button id="authButton" onclick="handleAuth()">
+                Criar conta
+            </button>
+
+            <button
+                class="secondary"
+                id="authSwitch"
+                onclick="switchAuthMode()"
+            >
+                Já tenho uma conta
+            </button>
+
+            <div id="authStatus" class="status"></div>
+
+        </div>
+
+    </div>
+</section>
+<!-- ANIMAÇÃO DE ENTRADA -->
+<div id="introAnimation">
+    <svg viewBox="0 0 400 300" aria-hidden="true">
+        <path class="draw-line line1" d="M70 210 C90 150, 120 80, 190 65 C250 52, 315 100, 330 170" />
+        <path class="draw-line line2" d="M85 215 C140 190, 210 185, 315 210" />
+        <path class="draw-line line3" d="M125 135 C145 110, 175 105, 195 130 C210 150, 190 170, 165 168 C140 166, 125 155, 125 135" />
+        <path class="draw-line line4" d="M220 120 C245 105, 275 112, 285 135 C295 160, 275 178, 250 175" />
+    </svg>
+
+    <div id="introTitle">ART SCORE</div>
+</div>    
+ <div id="backgroundAnimation">
+    <div class="ambient ambient1"></div>
+    <div class="ambient ambient2"></div>
+    <div class="ambient ambient3"></div>
+    <div class="particles"></div>
+</div>   
+<audio id="bgMusic">
+  <source src="Laufey - From The Start (Official Music Video)(MP3_160K).mp3" type="audio/mpeg">
+</audio>
+<div id="musicControls">
+    <label>
+        Volume
+        <input id="musicVolume" type="range" min="0" max="1" step="0.01" value="0.5">
+    </label>
+</div>
+
+<header><div class="logo">ART SCORE</div></header>
+
+<section id="analyzePage" class="page">
+<h1>Analisar desenho</h1>
+<div class="subtitle">Fotografe seu desenho ou escolha uma imagem da galeria. O ART SCORE analisará características visuais da imagem.</div>
+<div class="card">
+<div class="upload-box">
+<input id="imageInput" type="file" accept="image/*" capture="environment">
+<p>Para maior precisão, fotografe a folha inteira, tentando manter suas bordas visíveis.</p>
+</div>
+<img id="preview" class="preview">
+<button id="analyzeButton" disabled>INICIAR ANÁLISE</button>
+</div>
+<div class="card">
+<div class="notice">Esta versão utiliza processamento matemático da imagem. Ela analisa composição, ocupação, posição, espaço, contraste, brilho, cores e detalhes visuais. Não interpreta personalidade, emoções ou diagnósticos.</div>
+</div>
+</section>
+
+<section id="analysisPage" class="page">
+<div class="card analysis-box">
+<div class="spinner"></div>
+<h1>Analisando desenho</h1>
+<div id="analysisStatus" class="status">Preparando imagem...</div>
+</div>
+</section>
+
+<section id="resultPage" class="page">
+<h1>Resultado</h1>
+<div class="card score-box">
+<div class="score" id="generalScore">0.00</div>
+<div class="percent" id="generalPercent">0%</div>
+<div class="small-info">qualidade visual calculada</div>
+</div>
+
+<div class="card">
+<h1 style="font-size:18px;margin-bottom:18px;">Categorias</h1>
+<div id="categories"></div>
+</div>
+
+<div class="card">
+<h1 style="font-size:18px;">Pontos fortes</h1>
+<div id="strengths" class="list"></div>
+</div>
+
+<div class="card">
+<h1 style="font-size:18px;">Melhorias</h1>
+<div id="improvements" class="list"></div>
+</div>
+
+<div class="card">
+<h1 style="font-size:18px;">Prioridades</h1>
+<div id="priorities" class="list"></div>
+</div>
+
+<div class="card">
+<h1 style="font-size:18px;">Exercícios sugeridos</h1>
+<div id="exercises" class="list"></div>
+</div>
+
+<div class="card">
+<div>
+<label class="field-label" for="rankingName">Nome no ranking</label>
+<input id="rankingName" class="text-input" type="text" maxlength="30" placeholder="Digite o nome que aparecerá no ranking">
+</div>
+
+<div class="option-box">
+<div class="toggle">
+<label for="participateRanking">Participar do ranking</label>
+<input id="participateRanking" type="checkbox">
+</div>
+
+<div class="toggle">
+<label for="allowView">Permitir que outras pessoas visualizem este desenho</label>
+<input id="allowView" type="checkbox">
+</div>
+</div>
+
+<div class="notice">O nome e as opções acima são salvos junto com este desenho. A participação no ranking e a visualização podem ser desativadas antes de salvar.</div>
+
+<button id="saveButton">SALVAR DESENHO</button>
+<button class="secondary" onclick="goToPage('analyzePage')">ANALISAR OUTRO</button>
+</div>
+</section>
+
+<section id="galleryPage" class="page">
+<h1>Galeria</h1>
+<div class="subtitle">Seus desenhos salvos neste dispositivo.</div>
+<div id="gallery"></div>
+</section>
+
+<section id="rankingPage" class="page">
+<h1>Ranking</h1>
+<div class="subtitle">Ranking local dos desenhos que escolheram participar neste dispositivo.</div>
+<div id="ranking"></div>
+</section>
+
+<section id="profilePage" class="page">
+<h1>Perfil</h1>
+<div class="card">
+<div class="grid">
+<div class="stat"><div class="stat-value" id="profileBest">0.00</div><div class="stat-label">melhor nota</div></div>
+<div class="stat"><div class="stat-value" id="profilePercent">0%</div><div class="stat-label">melhor porcentagem</div></div>
+<div class="stat"><div class="stat-value" id="profileDrawings">0</div><div class="stat-label">desenhos</div></div>
+<div class="stat"><div class="stat-value" id="profilePublic">0</div><div class="stat-label">públicos</div></div>
+</div>
+</div>
+</section>
+
+<nav>
+<button id="navAnalyze" class="active" onclick="goToPage('analyzePage')">Analisar</button>
+<button id="navGallery" onclick="goToPage('galleryPage')">Galeria</button>
+<button id="navRanking" onclick="goToPage('rankingPage')">Ranking</button>
+<button id="navProfile" onclick="goToPage('profilePage')">Perfil</button>
+</nav>
+
+<div id="imageModal" class="modal" onclick="closeImageModal(event)">
+<div class="modal-box" onclick="event.stopPropagation()">
+<img id="modalImage" alt="Desenho do ranking">
+<button class="secondary" onclick="closeImageModal()">FECHAR</button>
+</div>
+</div>
+
+<script>
+const imageInput=document.getElementById("imageInput");
+const preview=document.getElementById("preview");
+const analyzeButton=document.getElementById("analyzeButton");
+const playlist = [
+    "Laufey - From The Start (Official Music Video)(MP3_160K).mp3",
+    "The Amazing Digital Circus - Main Theme(MP3_160K).mp3",
+    "sunrise theme song_•°1_14 minutes°•(MP3_160K).mp3",
+    "Mice On Venus but make it _E X T R A_ nostalgic(MP3_160K).mp3",
+    "Tyler_ The Creator - SEE YOU AGAIN (ft. Kali Uchis)(MP3_160K).mp3",
+    "Like Him(MP3_160K).mp3"
+];
+
+let musicaAtual = 0;
+
+playlist.sort(() => Math.random() - 0.5);
+
+const bgMusic = document.getElementById("bgMusic");
+function atualizarAmbiente() {
+    const hora = new Date().getHours();
+
+    document.body.classList.remove(
+        "morning",
+        "afternoon",
+        "night",
+        "midnight"
+    );
+
+    if (hora >= 6 && hora < 12) {
+        document.body.classList.add("morning");
+    } 
+    else if (hora >= 12 && hora < 18) {
+        document.body.classList.add("afternoon");
+    } 
+    else if (hora >= 18 && hora < 24) {
+        document.body.classList.add("night");
+    } 
+    else {
+        document.body.classList.add("midnight");
+    }
+}
+
+atualizarAmbiente();
+
+setInterval(atualizarAmbiente, 60000);
+
+bgMusic.volume = 0.5;
+
+function tocarMusica() {
+    bgMusic.src = playlist[musicaAtual];
+    bgMusic.play().catch(() => {});
+}
+
+bgMusic.addEventListener("ended", function() {
+    musicaAtual++;
+
+    if (musicaAtual >= playlist.length) {
+        musicaAtual = 0;
+        playlist.sort(() => Math.random() - 0.5);
+    }
+
+    tocarMusica();
+});
+
+document.addEventListener("click", function() {
+    tocarMusica();
+}, { once: true });
+const musicVolume = document.getElementById("musicVolume");
+
+musicVolume.addEventListener("input", function() {
+    bgMusic.volume = musicVolume.value;
+});
+let selectedImage=null;
+let currentResult=null;
+function goToPage(pageId){
+    document.querySelectorAll(".page").forEach(page=>page.classList.remove("active"));
+    document.getElementById(pageId).classList.add("active");
+    document.querySelectorAll("nav button").forEach(button=>button.classList.remove("active"));
+
+    if(pageId==="analyzePage")
+        document.getElementById("navAnalyze").classList.add("active");
+
+    if(pageId==="galleryPage"){
+        document.getElementById("navGallery").classList.add("active");
+        renderGallery();
+    }
+
+    if(pageId==="rankingPage"){
+        document.getElementById("navRanking").classList.add("active");
+        renderRanking();
+    }
+
+    if(pageId==="profilePage"){
+        document.getElementById("navProfile").classList.add("active");
+        renderProfile();
+    }
+}
+
+
+/* AUTENTICAÇÃO */
+
+let authMode = "signup";
+
+function switchAuthMode() {
+    const signupFields = document.getElementById("signupFields");
+    const authTitle = document.getElementById("authTitle");
+    const authSubtitle = document.getElementById("authSubtitle");
+    const authButton = document.getElementById("authButton");
+    const authSwitch = document.getElementById("authSwitch");
+
+    if (authMode === "signup") {
+        authMode = "login";
+
+        signupFields.style.display = "none";
+        authTitle.textContent = "Entrar";
+        authSubtitle.textContent = "Entre no seu perfil do ART SCORE.";
+        authButton.textContent = "Entrar";
+        authSwitch.textContent = "Criar uma conta";
+    } else {
+        authMode = "signup";
+
+        signupFields.style.display = "block";
+        authTitle.textContent = "Criar conta";
+        authSubtitle.textContent = "Crie seu perfil de artista.";
+        authButton.textContent = "Criar conta";
+        authSwitch.textContent = "Já tenho uma conta";
+    }
+
+    document.getElementById("authStatus").textContent = "";
+}
+
+async function handleAuth() {
+    const email = document.getElementById("authEmail").value.trim();
+    const password = document.getElementById("authPassword").value;
+    const status = document.getElementById("authStatus");
+
+    status.textContent = "";
+
+    if (!email || !password) {
+        status.textContent = "Preencha e-mail e senha.";
+        return;
+    }
+
+    if (authMode === "signup") {
+
+        const username = document
+            .getElementById("signupUsername")
+            .value
+            .trim()
+            .replace(/^@/, "");
+
+        const displayName = document
+            .getElementById("signupDisplayName")
+            .value
+            .trim();
+
+        if (!username) {
+            status.textContent = "Escolha um nome de usuário.";
+            return;
+        }
+
+        if (!/^[a-zA-Z0-9_.-]+$/.test(username)) {
+            status.textContent =
+                "O nome de usuário pode usar letras, números, ponto, hífen e underline.";
+            return;
+        }
+
+        status.textContent = "Criando sua conta...";
+
+        const { data, error } = await supabaseClient.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                data: {
+                    username: username,
+                    display_name: displayName || username
+                }
+            }
+        });
+
+        if (error) {
+            status.textContent = error.message;
+            return;
+        }
+
+        if (data.user) {
+            status.textContent =
+                "Conta criada. Verifique seu e-mail se a confirmação estiver ativada.";
+        }
+
+    } else {
+
+        status.textContent = "Entrando...";
+
+        const { data, error } =
+            await supabaseClient.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+        if (error) {
+            status.textContent = error.message;
+            return;
+        }
+
+        status.textContent = "Login realizado.";
+
+        setTimeout(() => {
+            document.getElementById("authPage").classList.remove("active");
+            document.getElementById("analyzePage").classList.add("active");
+        }, 500);
+    }
+}
+
+imageInput.addEventListener("change",function(event){
+const file=event.target.files[0];
+if(!file)return;
+const reader=new FileReader();
+reader.onload=function(e){
+selectedImage=e.target.result;
+preview.src=selectedImage;
+preview.style.display="block";
+analyzeButton.disabled=false;
+};
+reader.readAsDataURL(file);
+});
+
+analyzeButton.addEventListener("click",startAnalysis);
+
+async function startAnalysis(){
+if(!selectedImage)return;
+goToPage("analysisPage");
+const status=document.getElementById("analysisStatus");
+try{
+status.textContent="Carregando imagem...";
+await wait(400);
+status.textContent="Detectando área da folha...";
+await wait(500);
+currentResult=await analyzeImage(selectedImage);
+status.textContent="Calculando composição...";
+await wait(400);
+status.textContent="Calculando detalhes...";
+await wait(400);
+status.textContent="Finalizando avaliação...";
+await wait(400);
+displayResult(currentResult);
+goToPage("resultPage");
+}catch(error){
+console.error(error);
+alert("Não foi possível analisar esta imagem.");
+goToPage("analyzePage");
+}
+}
+
+function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
+
+function analyzeImage(dataUrl){
+return new Promise(function(resolve,reject){
+const image=new Image();
+image.onload=function(){
+try{
+const originalWidth=image.naturalWidth;
+const originalHeight=image.naturalHeight;
+const maxSize=800;
+let width=originalWidth,height=originalHeight;
+if(width>maxSize||height>maxSize){
+const scale=Math.min(maxSize/width,maxSize/height);
+width=Math.round(width*scale);
+height=Math.round(height*scale);
+}
+const canvas=document.createElement("canvas");
+canvas.width=width;canvas.height=height;
+const ctx=canvas.getContext("2d",{willReadFrequently:true});
+ctx.drawImage(image,0,0,width,height);
+const imageData=ctx.getImageData(0,0,width,height);
+const data=imageData.data;
+const paper=detectPaper(data,width,height);
+const metrics=calculateMetrics(data,width,height,paper);
+resolve(buildResult(metrics));
+}catch(error){reject(error);}
+};
+image.onerror=function(){reject(new Error("Erro ao carregar imagem."));};
+image.src=dataUrl;
+});
+}
+
+function detectPaper(data,width,height){
+const sampleStep=Math.max(2,Math.floor(Math.max(width,height)/300));
+let minX=width,minY=height,maxX=-1,maxY=-1,totalLight=0;
+for(let y=0;y<height;y+=sampleStep){
+for(let x=0;x<width;x+=sampleStep){
+const index=(y*width+x)*4;
+const r=data[index],g=data[index+1],b=data[index+2];
+const brightness=(r+g+b)/3;
+const max=Math.max(r,g,b),min=Math.min(r,g,b);
+const saturation=max===0?0:(max-min)/max;
+if(brightness>170&&saturation<0.28){
+totalLight++;
+if(x<minX)minX=x;if(y<minY)minY=y;if(x>maxX)maxX=x;if(y>maxY)maxY=y;
+}
+}}
+const totalSamples=Math.ceil(width/sampleStep)*Math.ceil(height/sampleStep);
+const paperRatio=totalLight/Math.max(1,totalSamples);
+if(paperRatio<0.20||maxX<0)return{x:0,y:0,width,height,confidence:0};
+const paddingX=Math.round(width*.025),paddingY=Math.round(height*.025);
+minX=Math.max(0,minX-paddingX);minY=Math.max(0,minY-paddingY);
+maxX=Math.min(width-1,maxX+paddingX);maxY=Math.min(height-1,maxY+paddingY);
+const detectedWidth=maxX-minX+1,detectedHeight=maxY-minY+1;
+if(detectedWidth<width*.45||detectedHeight<height*.45)return{x:0,y:0,width,height,confidence:0};
+const areaRatio=(detectedWidth*detectedHeight)/(width*height);
+let confidence=clamp(paperRatio*1.5+areaRatio*.5,0,1);
+return{x:minX,y:minY,width:detectedWidth,height:detectedHeight,confidence};
+}
+
+function calculateMetrics(data,width,height,paper){
+const startX=paper.x,startY=paper.y,endX=paper.x+paper.width,endY=paper.y+paper.height;
+let totalBrightness=0,totalBrightnessSq=0,totalSaturation=0,totalR=0,totalG=0,totalB=0;
+let darkPixels=0,brightPixels=0,coloredPixels=0,nonWhitePixels=0,detailPixels=0,pixels=0;
+let weightedX=0,weightedY=0,weightedMass=0;
+const grid=[[0,0,0],[0,0,0],[0,0,0]];
+const step=Math.max(1,Math.floor(Math.max(paper.width,paper.height)/500));
+
+for(let y=startY;y<endY;y+=step){
+for(let x=startX;x<endX;x+=step){
+const index=(y*width+x)*4;
+const r=data[index],g=data[index+1],b=data[index+2];
+const brightness=(r+g+b)/3;
+const max=Math.max(r,g,b),min=Math.min(r,g,b);
+const saturation=max===0?0:(max-min)/max;
+totalBrightness+=brightness;totalBrightnessSq+=brightness*brightness;
+totalSaturation+=saturation;totalR+=r;totalG+=g;totalB+=b;
+if(brightness<75)darkPixels++;
+if(brightness>220)brightPixels++;
+if(saturation>.22)coloredPixels++;
+if(brightness<235||saturation>.12){
+nonWhitePixels++;weightedMass+=255-brightness;
+weightedX+=(255-brightness)*(x-startX);weightedY+=(255-brightness)*(y-startY);
+}
+if(x+step<endX&&y+step<endY){
+const ni=((y+step)*width+(x+step))*4;
+const neighborBrightness=(data[ni]+data[ni+1]+data[ni+2])/3;
+if(Math.abs(brightness-neighborBrightness)>28)detailPixels++;
+}
+const relativeX=(x-startX)/Math.max(1,paper.width);
+const relativeY=(y-startY)/Math.max(1,paper.height);
+let gx=Math.max(0,Math.min(2,Math.floor(relativeX*3)));
+let gy=Math.max(0,Math.min(2,Math.floor(relativeY*3)));
+grid[gy][gx]+=Math.max(0,255-brightness);
+pixels++;
+}}
+
+const avgBrightness=totalBrightness/Math.max(1,pixels);
+const variance=totalBrightnessSq/Math.max(1,pixels)-avgBrightness*avgBrightness;
+const standardDeviation=Math.sqrt(Math.max(0,variance));
+const avgSaturation=totalSaturation/Math.max(1,pixels);
+const avgR=totalR/Math.max(1,pixels),avgG=totalG/Math.max(1,pixels),avgB=totalB/Math.max(1,pixels);
+const darkRatio=darkPixels/Math.max(1,pixels),brightRatio=brightPixels/Math.max(1,pixels);
+const colorRatio=coloredPixels/Math.max(1,pixels),detailRatio=detailPixels/Math.max(1,pixels);
+const occupancy=nonWhitePixels/Math.max(1,pixels);
+
+let centerX=paper.width/2,centerY=paper.height/2;
+if(weightedMass>0){centerX=weightedX/weightedMass;centerY=weightedY/weightedMass;}
+const normalizedX=centerX/Math.max(1,paper.width),normalizedY=centerY/Math.max(1,paper.height);
+const distanceFromCenter=Math.sqrt(Math.pow(normalizedX-.5,2)+Math.pow(normalizedY-.5,2));
+let centeredScore=clamp(100-distanceFromCenter*140,0,100);
+
+let gridTotal=0;
+for(let gy=0;gy<3;gy++)for(let gx=0;gx<3;gx++)gridTotal+=grid[gy][gx];
+const gridAverage=gridTotal/9;
+let gridDeviation=0;
+for(let gy=0;gy<3;gy++)for(let gx=0;gx<3;gx++)gridDeviation+=Math.abs(grid[gy][gx]-gridAverage);
+const normalizedDeviation=gridDeviation/Math.max(1,gridTotal);
+const quadrantBalance=clamp(100-normalizedDeviation*100,0,100);
+const spatialBalance=(centeredScore+quadrantBalance)/2;
+const contrastScore=clamp(standardDeviation*2.5,0,100);
+const detailScore=clamp(detailRatio*900,0,100);
+const colorScore=clamp(colorRatio*160+avgSaturation*45,0,100);
+const negativeSpace=clamp(100-occupancy*100,0,100);
+const spaceUsage=clamp(occupancy*130,0,100);
+const paperAspect=paper.width/Math.max(1,paper.height);
+const aspectScore=clamp(100-Math.abs(paperAspect-.707)*100,0,100);
+const depthScore=clamp(contrastScore*.45+detailScore*.35+spaceUsage*.20,0,100);
+const harmonyScore=clamp(100-Math.abs(colorRatio*100-35)*1.3,0,100);
+
+return{paper,avgBrightness,standardDeviation,avgSaturation,avgR,avgG,avgB,darkRatio,brightRatio,colorRatio,detailRatio,occupancy,centerX:normalizedX*100,centerY:normalizedY*100,centeredScore,quadrantBalance,spatialBalance,contrastScore,detailScore,colorScore,negativeSpace,spaceUsage,aspectScore,depthScore,harmonyScore};
+}
+
+function buildResult(m){
+const categories=[
+{name:"Composição",score:average([m.spatialBalance,m.centeredScore,m.quadrantBalance])},
+{name:"Posicionamento na folha",score:m.centeredScore},
+{name:"Tamanho / dimensões",score:spaceSizeScore(m.occupancy)},
+{name:"Uso do espaço",score:m.spaceUsage},
+{name:"Espaço negativo",score:m.negativeSpace},
+{name:"Proporções visuais",score:average([m.aspectScore,m.spatialBalance])},
+{name:"Anatomia",score:estimateAnatomy(m)},
+{name:"Perspectiva",score:estimatePerspective(m)},
+{name:"Qualidade das linhas",score:estimateLineQuality(m)},
+{name:"Pressão / variação visual",score:estimatePressure(m)},
+{name:"Luz e sombra",score:lightShadowScore(m)},
+{name:"Cores",score:m.colorScore},
+{name:"Detalhes",score:m.detailScore},
+{name:"Expressividade visual",score:average([m.contrastScore,m.colorScore,m.detailScore])},
+{name:"Pose",score:estimatePose(m)},
+{name:"Movimento",score:estimateMovement(m)},
+{name:"Profundidade",score:m.depthScore},
+{name:"Fundo / cenário",score:backgroundScore(m)},
+{name:"Contraste",score:m.contrastScore},
+{name:"Harmonia",score:m.harmonyScore},
+{name:"Equilíbrio visual",score:m.spatialBalance}
+];
+const generalScore=average(categories.map(c=>c.score));
+return{generalScore:generalScore/10,percentage:generalScore,categories,metrics:m,strengths:generateStrengths(m,categories),improvements:generateImprovements(m,categories),priorities:generatePriorities(m),exercises:generateExercises(m)};
+}
+
+function estimateAnatomy(m){return average([m.detailScore,m.spatialBalance,m.contrastScore])}
+function estimatePerspective(m){return average([m.depthScore,m.contrastScore,m.spatialBalance])}
+function estimateLineQuality(m){return average([m.detailScore,m.contrastScore,100-Math.abs(m.standardDeviation-35)*1.5])}
+function estimatePressure(m){return clamp(100-Math.abs(m.contrastScore-60)*.7,0,100)}
+function estimatePose(m){return average([m.spatialBalance,m.detailScore])}
+function estimateMovement(m){return average([m.spatialBalance,m.depthScore])}
+function lightShadowScore(m){return average([m.contrastScore,m.darkRatio*180,m.brightRatio*120])}
+function backgroundScore(m){return clamp(100-Math.abs(m.negativeSpace-55)*.8,0,100)}
+function spaceSizeScore(occupancy){return clamp(100-Math.abs(occupancy-.38)*160,0,100)}
+
+function generateStrengths(m){
+const result=[];
+if(m.centeredScore>=75)result.push("O elemento principal apresenta boa centralização visual.");
+if(m.contrastScore>=65)result.push("A imagem apresenta contraste visual bem perceptível.");
+if(m.detailScore>=60)result.push("Existe uma quantidade significativa de variações e detalhes visuais.");
+if(m.colorScore>=60)result.push("Existe presença relevante de informação cromática.");
+if(m.spatialBalance>=70)result.push("A distribuição da massa visual está relativamente equilibrada.");
+if(result.length===0)result.push("A análise encontrou características visuais que podem ser desenvolvidas nas próximas versões.");
+return result;
+}
+
+function generateImprovements(m){
+const result=[];
+if(m.spatialBalance<55)result.push("Experimente observar melhor a distribuição do desenho dentro da folha.");
+if(m.contrastScore<40)result.push("Aumentar a diferença entre áreas claras e escuras pode melhorar a leitura visual.");
+if(m.detailScore<35)result.push("Algumas áreas podem receber mais variação de linhas ou detalhes.");
+if(m.colorScore<30)result.push("Se a proposta utilizar cores, experimente desenvolver mais variações cromáticas.");
+if(m.negativeSpace<20)result.push("O desenho ocupa grande parte da área detectada; observe se isso é intencional.");
+if(m.negativeSpace>85)result.push("Existe bastante espaço vazio em relação à área analisada.");
+if(result.length===0)result.push("A composição apresenta um conjunto equilibrado de características visuais.");
+return result;
+}
+
+function generatePriorities(m){
+const priorities=[{name:"Composição",score:m.spatialBalance},{name:"Contraste",score:m.contrastScore},{name:"Detalhes",score:m.detailScore},{name:"Cores",score:m.colorScore},{name:"Uso do espaço",score:m.spaceUsage}];
+priorities.sort((a,b)=>a.score-b.score);
+return priorities.slice(0,3).map(item=>item.name+" — "+Math.round(item.score)+"/100");
+}
+
+function generateExercises(m){
+const result=[];
+if(m.contrastScore<55)result.push("Faça estudos rápidos usando apenas três valores: claro, médio e escuro.");
+if(m.detailScore<50)result.push("Faça estudos de linhas com diferentes direções, espessuras e intervalos.");
+if(m.spatialBalance<60)result.push("Faça pequenas composições em miniatura antes de começar o desenho final.");
+if(m.colorScore<45)result.push("Faça estudos usando uma paleta limitada de poucas cores.");
+if(result.length===0)result.push("Repita o desenho tentando melhorar apenas uma categoria por vez.");
+return result;
+}
+
+function displayResult(result){
+document.getElementById("generalScore").textContent=result.generalScore.toFixed(2);
+document.getElementById("generalPercent").textContent=result.percentage.toFixed(1)+"%";
+const categories=document.getElementById("categories");categories.innerHTML="";
+result.categories.forEach(category=>{
+const score=clamp(category.score,0,100);
+categories.innerHTML+=`<div class="category"><div class="category-head"><span class="category-name">${escapeHtml(category.name)}</span><span class="category-score">${score.toFixed(0)}/100</span></div><div class="bar"><div class="bar-fill" style="width:${score}%"></div></div></div>`;
+});
+renderList("strengths",result.strengths);
+renderList("improvements",result.improvements);
+renderList("priorities",result.priorities);
+renderList("exercises",result.exercises);
+document.getElementById("rankingName").value="";
+document.getElementById("participateRanking").checked=false;
+document.getElementById("allowView").checked=false;
+}
+
+function renderList(id,items){
+const element=document.getElementById(id);element.innerHTML="";
+items.forEach(item=>{const div=document.createElement("div");div.className="list-item";div.textContent=item;element.appendChild(div);});
+}
+
+document.getElementById("saveButton").addEventListener("click",saveCurrentDrawing);
+
+function saveCurrentDrawing(){
+if(!currentResult||!selectedImage)return;
+
+const rankingName=document.getElementById("rankingName").value.trim();
+const participateRanking=document.getElementById("participateRanking").checked;
+const allowView=document.getElementById("allowView").checked;
+
+if(participateRanking&&!rankingName){
+alert("Digite um nome para participar do ranking.");
+document.getElementById("rankingName").focus();
+return;
+}
+
+const drawings=getDrawings();
+const drawing={
+id:Date.now(),
+image:selectedImage,
+score:currentResult.generalScore,
+percentage:currentResult.percentage,
+public:allowView,
+rankingName:rankingName||"Artista",
+participateRanking:participateRanking,
+allowView:allowView,
+createdAt:new Date().toISOString()
+};
+
+drawings.push(drawing);
+localStorage.setItem("artScoreDrawings",JSON.stringify(drawings));
+alert("Desenho salvo.");
+renderGallery();
+}
+
+function getDrawings(){
+try{return JSON.parse(localStorage.getItem("artScoreDrawings"))||[]}
+catch(error){return[]}
+}
+
+function renderGallery(){
+const gallery=document.getElementById("gallery");
+const drawings=getDrawings();
+if(drawings.length===0){
+gallery.innerHTML=`<div class="card empty">Nenhum desenho salvo ainda.</div>`;
+return;
+}
+gallery.innerHTML="";
+drawings.slice().reverse().forEach(drawing=>{
+const card=document.createElement("div");card.className="card drawing-card";
+const name=drawing.rankingName||"Artista";
+const participates=Boolean(drawing.participateRanking);
+const viewAllowed=Boolean(drawing.allowView||drawing.public);
+card.innerHTML=`<img src="${drawing.image}" alt="Desenho"><div class="drawing-info"><strong>${Number(drawing.score||0).toFixed(2)}/10</strong><span>${Number(drawing.percentage||0).toFixed(1)}%</span><br><span>${viewAllowed?"Visualização permitida":"Visualização privada"}</span><br><span>${participates?"Participando do ranking":"Fora do ranking"}</span>${participates?`<br><span>${escapeHtml(name)}</span>`:""}</div>`;
+gallery.appendChild(card);
+});
+}
+
+function renderRanking(){
+const ranking=document.getElementById("ranking");
+const drawings=getDrawings().filter(d=>Boolean(d.participateRanking));
+drawings.sort((a,b)=>(Number(b.score)||0)-(Number(a.score)||0));
+
+if(drawings.length===0){
+ranking.innerHTML=`<div class="card empty">Nenhum desenho está participando do ranking ainda.</div>`;
+return;
+}
+
+ranking.innerHTML="";
+drawings.forEach((drawing,index)=>{
+const card=document.createElement("div");card.className="card";
+const name=escapeHtml(drawing.rankingName||"Artista");
+const score=Number(drawing.score)||0;
+const percentage=Number(drawing.percentage)||0;
+const canView=Boolean(drawing.allowView||drawing.public);
+
+card.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:15px;"><div><strong>#${index+1}</strong><div style="color:#d6edf2;font-size:15px;margin-top:6px;">${name}</div><div style="color:#8ca9b2;font-size:12px;margin-top:5px;">Participante do ranking</div></div><div style="text-align:right;"><strong style="color:#5de6ff;font-size:20px;">${score.toFixed(2)}</strong><div style="color:#78949d;font-size:11px;">${percentage.toFixed(1)}%</div></div></div>`;
+
+if(canView){
+const actions=document.createElement("div");actions.className="rank-actions";
+const viewButton=document.createElement("button");viewButton.textContent="VER DESENHO";viewButton.onclick=()=>openImageModal(drawing.image);
+actions.appendChild(viewButton);
+card.appendChild(actions);
+}else{
+const privateText=document.createElement("div");
+privateText.style.cssText="color:#718c96;font-size:12px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06);";
+privateText.textContent="Desenho privado";
+card.appendChild(privateText);
+}
+ranking.appendChild(card);
+});
+}
+
+function openImageModal(image){
+document.getElementById("modalImage").src=image;
+document.getElementById("imageModal").classList.add("active");
+}
+
+function closeImageModal(event){
+if(event&&event.target!==document.getElementById("imageModal"))return;
+document.getElementById("imageModal").classList.remove("active");
+document.getElementById("modalImage").src="";
+}
+
+function renderProfile(){
+const drawings=getDrawings();
+const publicDrawings=drawings.filter(d=>Boolean(d.public));
+let best=0;
+drawings.forEach(drawing=>{if((Number(drawing.score)||0)>best)best=Number(drawing.score)||0});
+document.getElementById("profileBest").textContent=best.toFixed(2);
+document.getElementById("profilePercent").textContent=(best*10).toFixed(1)+"%";
+document.getElementById("profileDrawings").textContent=drawings.length;
+document.getElementById("profilePublic").textContent=publicDrawings.length;
+}
+
+function escapeHtml(value){
+return String(value)
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+}
+
+function average(values){
+if(!values.length)return 0;
+return values.reduce((total,value)=>total+value,0)/values.length;
+}
+
+function clamp(value,min,max){return Math.max(min,Math.min(max,value));}
+
+renderGallery();
+renderRanking();
+renderProfile();
+setTimeout(() => {
+    const intro = document.getElementById("introAnimation");
+
+    if (intro) {
+        intro.remove();
+    }
+}, 3800);
+</script>
+
+</body>
+</html>
