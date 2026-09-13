@@ -1411,10 +1411,13 @@ async function saveCurrentDrawing(){
             }
 
             if(rankingError){
-                console.error(rankingError);
-                alert("Erro ao salvar no ranking.");
-                return;
-            }
+    console.error(rankingError);
+    alert(
+        "Erro ao salvar no ranking:\n\n" +
+        rankingError.message
+    );
+    return;
+}
         }
     }
 
