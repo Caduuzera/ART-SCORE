@@ -1508,6 +1508,7 @@ gallery.appendChild(card);
 }
 
 async function renderRanking(){
+
     const ranking = document.getElementById("ranking");
 
     ranking.innerHTML = `
@@ -1520,6 +1521,7 @@ async function renderRanking(){
         .from("ranking_entries")
         .select(`
             id,
+            user_id,
             ranking_name,
             score,
             percentage,
@@ -1542,26 +1544,84 @@ async function renderRanking(){
         return;
     }
 
-    if(!data || data.length === 0){
-        ranking.innerHTML = `
-            <div class="card empty">
-                Nenhum desenho está participando do ranking ainda.
-            </div>
-        `;
+    const entries = data || [];
+    const totalParticipants = entries.length;
 
-        return;
+    const userResult =
+        await supabaseClient.auth.getUser();
+
+    const currentUser =
+        userResult.data.user;
+
+    let myPosition = null;
+
+    if(currentUser){
+
+        const myIndex = entries.findIndex(
+            entry => entry.user_id === currentUser.id
+        );
+
+        if(myIndex !== -1){
+            myPosition = myIndex + 1;
+        }
     }
 
     ranking.innerHTML = "";
 
-    data.forEach((entry, index) => {
+    const summary = document.createElement("div");
+    summary.className = "card";
+
+    summary.innerHTML = `
+        <strong>Ranking global</strong>
+
+        <div style="
+            color:#8ca9b2;
+            font-size:13px;
+            margin-top:8px;
+        ">
+            ${totalParticipants} participante${totalParticipants === 1 ? "" : "s"}
+        </div>
+
+        ${
+            myPosition !== null
+            ? `
+                <div style="
+                    color:#5de6ff;
+                    font-size:14px;
+                    margin-top:10px;
+                ">
+                    Sua posição: #${myPosition}
+                </div>
+            `
+            : ""
+        }
+    `;
+
+    ranking.appendChild(summary);
+
+    entries.forEach((entry, index) => {
 
         const card = document.createElement("div");
         card.className = "card";
 
-        const name = escapeHtml(entry.ranking_name || "Artista");
-        const score = Number(entry.score) || 0;
-        const percentage = Number(entry.percentage) || 0;
+        const name =
+            escapeHtml(entry.ranking_name || "Artista");
+
+        const score =
+            Number(entry.score) || 0;
+
+        const percentage =
+            Number(entry.percentage) || 0;
+
+        const position = index + 1;
+
+        if(
+            currentUser &&
+            entry.user_id === currentUser.id
+        ){
+            card.style.border =
+                "1px solid rgba(93,230,255,.45)";
+        }
 
         card.innerHTML = `
             <div style="
@@ -1572,7 +1632,8 @@ async function renderRanking(){
             ">
 
                 <div>
-                    <strong>#${index + 1}</strong>
+
+                    <strong>#${position}</strong>
 
                     <div style="
                         color:#d6edf2;
@@ -1587,11 +1648,19 @@ async function renderRanking(){
                         font-size:12px;
                         margin-top:5px;
                     ">
-                        Participante do ranking global
+                        ${
+                            currentUser &&
+                            entry.user_id === currentUser.id
+                            ? "Você"
+                            : "Participante do ranking global"
+                        }
                     </div>
+
                 </div>
 
-                <div style="text-align:right;">
+                <div style="
+                    text-align:right;
+                ">
 
                     <strong style="
                         color:#5de6ff;
@@ -1614,18 +1683,22 @@ async function renderRanking(){
 
         if(entry.drawing_url){
 
-            const actions = document.createElement("div");
+            const actions =
+                document.createElement("div");
+
             actions.className = "rank-actions";
 
             const viewButton =
                 document.createElement("button");
 
-            viewButton.textContent = "VER DESENHO";
+            viewButton.textContent =
+                "VER DESENHO";
 
             viewButton.onclick = () =>
                 openImageModal(entry.drawing_url);
 
             actions.appendChild(viewButton);
+
             card.appendChild(actions);
 
         }else{
