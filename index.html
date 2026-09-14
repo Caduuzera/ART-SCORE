@@ -1466,9 +1466,15 @@ async function uploadDrawingImage(dataUrl, userId){
                 });
 
         if(error){
-            console.error(error);
-            return null;
-        }
+    console.error("ERRO NO UPLOAD:", error);
+
+    alert(
+        "Não foi possível enviar o desenho:\n\n" +
+        error.message
+    );
+
+    return null;
+}
 
         const { data } =
             supabaseClient
@@ -1769,4 +1775,4 @@ setTimeout(() => {
 </script>
 
 </body>
-</html>
+    </html>
