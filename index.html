@@ -1456,11 +1456,11 @@ async function uploadDrawingImage(dataUrl, userId){
         const fileName =
             userId + "/" + Date.now() + ".jpg";
 
-        const { error } =
-            await supabaseClient
-                .storage
-                .from("drawings")
-                .upload(fileName, blob, {
+const { error } =
+    await supabaseClient
+        .storage
+        .from("Drawings")
+        .upload(fileName, blob, {
                     contentType: "image/jpeg",
                     upsert: false
                 });
@@ -1479,7 +1479,7 @@ async function uploadDrawingImage(dataUrl, userId){
         const { data } =
             supabaseClient
                 .storage
-                .from("drawings")
+                .from("Drawings")
                 .getPublicUrl(fileName);
 
         return data.publicUrl;
