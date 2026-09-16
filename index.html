@@ -2392,24 +2392,6 @@ async function saveProfile(){
         block: "start"
     });
 }
-function closeProfileEditor(){
-
-    const editor =
-        document.getElementById("profileEditor");
-
-    if(!editor){
-        return;
-    }
-
-    editor.style.display = "none";
-
-    const status =
-        document.getElementById("profileSaveStatus");
-
-    if(status){
-        status.textContent = "";
-    }
-}
 
 function escapeHtml(value){
 return String(value)
