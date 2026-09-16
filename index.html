@@ -627,6 +627,191 @@ body.midnight #backgroundAnimation::before{
         pointer-events:none;
     }
 }
+/* =========================
+   PERFIL
+========================= */
+
+.profile-header {
+    padding: 22px;
+}
+
+.profile-avatar-area {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.profile-avatar {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    background: #101820;
+    border: 2px solid #00d9ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#profileAvatarText {
+    font-size: 28px;
+    font-weight: bold;
+    color: #00d9ff;
+}
+
+.profile-identity {
+    min-width: 0;
+}
+
+.profile-identity h1 {
+    margin: 0;
+    font-size: 24px;
+    word-break: break-word;
+}
+
+.profile-username {
+    margin-top: 4px;
+    color: #8b9aa8;
+    font-size: 14px;
+}
+
+.profile-account-type {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 4px 9px;
+    border-radius: 8px;
+    background: #101820;
+    color: #00d9ff;
+    font-size: 11px;
+}
+
+.profile-bio {
+    margin-top: 18px;
+    color: #c8d0d8;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.profile-link {
+    display: inline-block;
+    margin-top: 10px;
+    color: #00d9ff;
+    text-decoration: none;
+    word-break: break-all;
+}
+
+.profile-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    text-align: center;
+}
+
+.profile-stat {
+    padding: 8px 2px;
+}
+
+.profile-stat strong {
+    display: block;
+    font-size: 19px;
+}
+
+.profile-stat span {
+    display: block;
+    margin-top: 4px;
+    color: #8b9aa8;
+    font-size: 11px;
+}
+
+.profile-section-title {
+    margin: 0 0 16px;
+    font-size: 18px;
+}
+
+.profile-feed {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+
+.profile-feed-item {
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #101820;
+    cursor: pointer;
+}
+
+.profile-feed-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-feed-empty {
+    color: #7f8b96;
+    font-size: 14px;
+    text-align: center;
+    padding: 20px 0;
+}
+
+.profile-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 18px;
+    overflow-x: auto;
+}
+
+.profile-tab {
+    flex: 1;
+    min-width: 90px;
+    padding: 10px 8px;
+    border: none;
+    border-radius: 8px;
+    background: #101820;
+    color: #8b9aa8;
+    cursor: pointer;
+}
+
+.profile-tab.active {
+    background: #00d9ff;
+    color: #050a10;
+    font-weight: bold;
+}
+
+#profileEditor {
+    margin-top: 16px;
+}
+
+#profileEditor textarea {
+    resize: vertical;
+    min-height: 90px;
+}
+
+@media (max-width: 500px) {
+
+    .profile-avatar {
+        width: 68px;
+        height: 68px;
+    }
+
+    .profile-identity h1 {
+        font-size: 20px;
+    }
+
+    .profile-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
 </style>
 </head>
 
@@ -825,15 +1010,252 @@ body.midnight #backgroundAnimation::before{
 </section>
 
 <section id="profilePage" class="page">
-<h1>Perfil</h1>
-<div class="card">
-<div class="grid">
-<div class="stat"><div class="stat-value" id="profileBest">0.00</div><div class="stat-label">melhor nota</div></div>
-<div class="stat"><div class="stat-value" id="profilePercent">0%</div><div class="stat-label">melhor porcentagem</div></div>
-<div class="stat"><div class="stat-value" id="profileDrawings">0</div><div class="stat-label">desenhos</div></div>
-<div class="stat"><div class="stat-value" id="profilePublic">0</div><div class="stat-label">públicos</div></div>
-</div>
-</div>
+
+    <div class="card profile-header">
+
+        <div class="profile-avatar-area">
+
+            <div class="profile-avatar" id="profileAvatar">
+                <span id="profileAvatarText">A</span>
+            </div>
+
+            <div class="profile-identity">
+
+                <h1 id="profileDisplayName">
+                    Artista
+                </h1>
+
+                <div id="profileUsername" class="profile-username">
+                    @artista
+                </div>
+
+                <div id="profileAccountType" class="profile-account-type">
+                    Conta pessoal
+                </div>
+
+            </div>
+
+        </div>
+
+        <div id="profileBio" class="profile-bio">
+            Ainda não há uma biografia.
+        </div>
+
+        <a
+            id="profileExternalLink"
+            class="profile-link"
+            href="#"
+            target="_blank"
+            style="display:none;"
+        ></a>
+
+        <button
+            class="secondary"
+            onclick="openProfileEditor()"
+        >
+            EDITAR PERFIL
+        </button>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="profile-stats">
+
+            <div class="profile-stat">
+                <strong id="profileDrawings">0</strong>
+                <span>desenhos</span>
+            </div>
+
+            <div class="profile-stat">
+                <strong id="profileBest">0.00</strong>
+                <span>melhor nota</span>
+            </div>
+
+            <div class="profile-stat">
+                <strong id="profilePercent">0%</strong>
+                <span>melhor porcentagem</span>
+            </div>
+
+            <div class="profile-stat">
+                <strong id="profilePublic">0</strong>
+                <span>públicos</span>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2 class="profile-section-title">
+            Publicações
+        </h2>
+
+        <div id="profileFeed" class="profile-feed"></div>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="profile-tabs">
+
+            <button
+                id="profileTabPosts"
+                class="profile-tab active"
+                onclick="switchProfileTab('posts')"
+            >
+                Publicações
+            </button>
+
+            <button
+                id="profileTabBest"
+                class="profile-tab"
+                onclick="switchProfileTab('best')"
+            >
+                Melhores
+            </button>
+
+            <button
+                id="profileTabCollabs"
+                class="profile-tab"
+                onclick="switchProfileTab('collabs')"
+            >
+                Collabs
+            </button>
+
+        </div>
+
+        <div id="profileTabContent"></div>
+
+    </div>
+
+
+    <div
+        id="profileEditor"
+        class="card"
+        style="display:none;"
+    >
+
+        <h2 class="profile-section-title">
+            Editar perfil
+        </h2>
+
+        <label class="field-label">
+            Nome de exibição
+        </label>
+
+        <input
+            id="editDisplayName"
+            class="text-input"
+            type="text"
+            maxlength="50"
+            placeholder="Seu nome"
+        >
+
+        <label class="field-label" style="margin-top:15px;">
+            Nome de usuário
+        </label>
+
+        <input
+            id="editUsername"
+            class="text-input"
+            type="text"
+            maxlength="30"
+            placeholder="@seunome"
+        >
+
+        <label class="field-label" style="margin-top:15px;">
+            Biografia
+        </label>
+
+        <textarea
+            id="editBio"
+            class="text-input"
+            maxlength="160"
+            rows="4"
+            placeholder="Fale um pouco sobre você..."
+        ></textarea>
+
+        <label class="field-label" style="margin-top:15px;">
+            Link externo
+        </label>
+
+        <input
+            id="editExternalLink"
+            class="text-input"
+            type="url"
+            placeholder="https://..."
+        >
+
+        <div class="toggle">
+            <label for="editPublicProfile">
+                Perfil público
+            </label>
+
+            <input
+                id="editPublicProfile"
+                type="checkbox"
+                checked
+            >
+        </div>
+
+        <label class="field-label" style="margin-top:15px;">
+            Tipo de conta
+        </label>
+
+        <select
+            id="editAccountType"
+            class="text-input"
+        >
+            <option value="personal">
+                Pessoal
+            </option>
+
+            <option value="creator">
+                Criador de conteúdo
+            </option>
+        </select>
+
+        <button onclick="saveProfile()">
+            function closeProfileEditor(){
+
+    const editor =
+        document.getElementById("profileEditor");
+
+    if(!editor){
+        return;
+    }
+
+    editor.style.display = "none";
+
+    const status =
+        document.getElementById("profileSaveStatus");
+
+    if(status){
+        status.textContent = "";
+    }
+}
+            SALVAR PERFIL
+        </button>
+
+        <button
+            class="secondary"
+            onclick="closeProfileEditor()"
+        >
+            CANCELAR
+        </button>
+
+        <div
+            id="profileSaveStatus"
+            class="status"
+        ></div>
+
+    </div>
+
 </section>
 
 <nav>
@@ -1735,17 +2157,240 @@ document.getElementById("imageModal").classList.remove("active");
 document.getElementById("modalImage").src="";
 }
 
-function renderProfile(){
-const drawings=getDrawings();
-const publicDrawings=drawings.filter(d=>Boolean(d.public));
-let best=0;
-drawings.forEach(drawing=>{if((Number(drawing.score)||0)>best)best=Number(drawing.score)||0});
-document.getElementById("profileBest").textContent=best.toFixed(2);
-document.getElementById("profilePercent").textContent=(best*10).toFixed(1)+"%";
-document.getElementById("profileDrawings").textContent=drawings.length;
-document.getElementById("profilePublic").textContent=publicDrawings.length;
+async function renderProfile(){
+
+    const userResult = await supabaseClient.auth.getUser();
+    const user = userResult.data.user;
+
+    if(!user){
+        return;
+    }
+
+    const { data: profile, error } = await supabaseClient
+        .from("profiles")
+        .select(`
+            username,
+            display_name,
+            bio,
+            external_link,
+            account_type,
+            avatar_url,
+            is_public
+        `)
+        .eq("id", user.id)
+        .maybeSingle();
+
+    if(error){
+        console.error("Erro ao carregar perfil:", error);
+        return;
+    }
+
+    if(!profile){
+        console.log("Perfil ainda não encontrado.");
+        return;
+    }
+
+    const displayName =
+        profile.display_name ||
+        "Artista";
+
+    const username =
+        profile.username ||
+        "artista";
+
+    document.getElementById("profileDisplayName").textContent =
+        displayName;
+
+    document.getElementById("profileUsername").textContent =
+        "@" + username.replace(/^@/, "");
+
+    document.getElementById("profileBio").textContent =
+        profile.bio ||
+        "Ainda não há uma biografia.";
+
+    const accountType =
+        profile.account_type === "creator"
+            ? "Criador de conteúdo"
+            : "Conta pessoal";
+
+    document.getElementById("profileAccountType").textContent =
+        accountType;
+
+    const externalLink =
+        document.getElementById("profileExternalLink");
+
+    if(profile.external_link){
+
+        externalLink.href = profile.external_link;
+        externalLink.textContent = profile.external_link;
+        externalLink.style.display = "inline-block";
+
+    }else{
+
+        externalLink.style.display = "none";
+
+    }
+
+    const avatar =
+        document.getElementById("profileAvatar");
+
+    if(profile.avatar_url){
+
+        avatar.innerHTML =
+            `<img src="${profile.avatar_url}" alt="Foto de perfil">`;
+
+    }else{
+
+        const firstLetter =
+            displayName.charAt(0).toUpperCase();
+
+        avatar.innerHTML =
+            `<span id="profileAvatarText">${firstLetter}</span>`;
+
+    }
+
+    const drawings = getDrawings();
+
+    const publicDrawings =
+        drawings.filter(drawing => Boolean(drawing.public));
+
+    let best = 0;
+
+    drawings.forEach(drawing => {
+
+        const score =
+            Number(drawing.score) || 0;
+
+        if(score > best){
+            best = score;
+        }
+
+    });
+
+    document.getElementById("profileBest").textContent =
+        best.toFixed(2);
+
+    document.getElementById("profilePercent").textContent =
+        (best * 10).toFixed(1) + "%";
+
+    document.getElementById("profileDrawings").textContent =
+        drawings.length;
+
+    document.getElementById("profilePublic").textContent =
+        publicDrawings.length;
+}
+function openProfileEditor(){
+async function saveProfile(){
+
+    const userResult = await supabaseClient.auth.getUser();
+    const user = userResult.data.user;
+
+    if(!user){
+        return;
+    }
+
+    const username =
+        document.getElementById("editUsername").value
+            .trim()
+            .replace(/^@/, "");
+
+    const displayName =
+        document.getElementById("editDisplayName").value.trim();
+
+    const bio =
+        document.getElementById("editBio").value.trim();
+
+    const externalLink =
+        document.getElementById("editExternalLink").value.trim();
+
+    const accountType =
+        document.getElementById("editAccountType").value;
+
+    const isPublic =
+        document.getElementById("editPublicProfile").checked;
+
+    const status =
+        document.getElementById("profileSaveStatus");
+
+    status.textContent = "Salvando...";
+
+    const { error } = await supabaseClient
+        .from("profiles")
+        .update({
+            username: username || null,
+            display_name: displayName || null,
+            bio: bio || null,
+            external_link: externalLink || null,
+            account_type: accountType,
+            is_public: isPublic
+        })
+        .eq("id", user.id);
+
+    if(error){
+
+        console.error("Erro ao salvar perfil:", error);
+
+        status.textContent =
+            "Não foi possível salvar o perfil.";
+
+        return;
+    }
+
+    status.textContent =
+        "Perfil salvo com sucesso.";
+
+    await renderProfile();
+
+    setTimeout(() => {
+        closeProfileEditor();
+    }, 800);
 }
 
+    const editor = document.getElementById("profileEditor");
+
+    if(!editor){
+        return;
+    }
+
+    editor.style.display = "block";
+
+    document.getElementById("editDisplayName").value =
+        document.getElementById("profileDisplayName").textContent.trim();
+
+    document.getElementById("editUsername").value =
+        document.getElementById("profileUsername").textContent
+            .trim()
+            .replace(/^@/, "");
+
+    const bio =
+        document.getElementById("profileBio").textContent.trim();
+
+    document.getElementById("editBio").value =
+        bio === "Ainda não há uma biografia."
+            ? ""
+            : bio;
+
+    const link =
+        document.getElementById("profileExternalLink");
+
+    document.getElementById("editExternalLink").value =
+        link.style.display !== "none"
+            ? link.href
+            : "";
+
+    const accountType =
+        document.getElementById("profileAccountType").textContent;
+
+    document.getElementById("editAccountType").value =
+        accountType === "Criador de conteúdo"
+            ? "creator"
+            : "personal";
+
+    editor.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
 function escapeHtml(value){
 return String(value)
 .replace(/&/g,"&amp;")
